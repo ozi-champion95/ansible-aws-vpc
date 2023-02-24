@@ -22,3 +22,35 @@
         dest: "./loginkey_exel.pem"
         mode: 0600
       when: exelkey_out.changed
+
+    - name: Create Security Group for Load Balancer
+      ec2_group:
+        name: exelELB-SG
+        description: Allow port 80 from everywhere and all port withing the SG
+        region: "{{region}}"
+        vpc_id: "{{vpcid}}"
+        rules:
+          - proto: tcp
+            from_port: 80
+            to_port: 80
+            cidr_ip: 0.0.0.0/0
+        register: exelELBSG_out
+
+    - name: Create Security Group for Exel Stack
+      ec2_group:
+        name: exelStack-SG
+        description: Allow port 22 from everywhere and all withing SG
+        region: "{{region}}"
+        vpc_id: "{{vpcid}}"
+        purge_rules: no
+        rules:
+          - proto: tcp
+            from_port: 80
+            to_port: 80
+            group_id: "{{exelELBSG_out.group_id}}"
+
+          - proto: tcp
+            from_port: 22
+            to_port: 22
+            group_id: "{{BastionSGid}}"
+        register: exelStackSG_out
