@@ -54,3 +54,15 @@
             to_port: 22
             group_id: "{{BastionSGid}}"
         register: exelStackSG_out
+
+    - name: Update Security Group with it's own SG ID
+      ec2_group:
+        name: exelStack-sg
+        description: Allow port 22 from everywhere and all port withing sg
+        region: "{{region}}"
+        vpc_id: "{{vpcid}}"
+        purge_rules: no
+        rules:
+          - proto: all
+            group_id: "{{exelStackSG_out.group_id}}"
+
